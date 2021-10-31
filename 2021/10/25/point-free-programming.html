@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/assets/css/styles.css"/>
+        <title>Point Free Programming</title>
+    </head>
+    <body>
+        <nav>
+    
+    <a href=/ >
+        Home
+    </a>
+    
+    <a href=/about.html >
+        About
+    </a>
+    
+    <a href=/blog.html >
+        Blog
+    </a>
+    
+</nav>
+
+
+        <h1>Point Free Programming</h1>
+<p>25 Oct 2021 - Sourav Datta</p>
+
+<p>Recently I have been trying to learn the art of point free programming and its a lot of fun!</p>
+
+<p><em>What is point free programming?</em> At very simplest level, it is functional programming without specifying the data the function is going to work on. That sounds crazy at first, but it is not. Lets find out how to do it with a very simple example. Please note that, since I am also learning this from a very basic level, all explanations below might not be accurate - and if so, let me know!</p>
+
+<p>We begin with functional programming. <em>Point free programming</em> (PFP) really works best when there are no side effects. Functional programming is all about defining the solution in terms of immutable data and functions working on those data. Of course you’d need side effects at some point in time - without side effects there would not be any real meaning of the program as it will not interact with the outside world. But in idea cases, the core of solution is functional and the side effects are pushed at one side where they can be easily managed and tracked. We will only talk here about that functional core.</p>
+
+<p>In FP, there is one very important aspect which is required to do PFP - higher order function composition.</p>
+
+<p>Higher order functions are functions which take other functions as arguments or return functions. Typical examples of higher order functions in most of today’s mainstream programming languages are map, filter and reduce. These higher order functions take functions and data as arguments and return results. There are a second variant of higher order functions which take functions as arguments (optionally data too) and return functions back. This kind of operations are called function composition  - or more generally, function combinations as they combine functions to create new functions. In mathematics, they are often known as logical combinators. Interestingly, most combinators do not really care about the data these functions work on - rather they only place the argument functions in certain order to create a new function out of those. Lets take one such combinator for example.</p>
+
+<p>The B combinator is probably the simplest of them all. Here is the Wiki for the <a href="https://en.wikipedia.org/wiki/B,_C,_K,_W_system">B combinator</a></p>
+
+<p><code class="language-plaintext highlighter-rouge">B x y z =&gt; x (y z)</code></p>
+
+<p>This essentially means, given two functions x and y and an argument z (can be another function or just data) - first apply y to z and then apply x to the result of the previous operation. In infix programming syntax this is simply x(y(z)). One thing to note though, that if we ignore the argument z for a moment, then <em>B</em> operator is just a function that takes whatever as arguments and then first applies y to it and then applies z to the result. In JavaScript this can be defined as follows:</p>
+
+<pre><code class="language-JavaScript">const B = (x, y) =&gt; z =&gt; x(y(z))
+</code></pre>
+
+<p>But what is the point of this? Well the point is to make it point free :-P Lets take a simple example. Given an array or list of numbers, we need to find the sum of squares of those numbers. The task can be simply done using an imperative code like below:</p>
+
+<pre><code class="language-Python">def sum_of_squares(l):
+    sum = 0
+    for i in l:
+        sum += i * i
+    return sum
+</code></pre>
+
+<p>A functional version might be:</p>
+
+<pre><code class="language-JavaScript">// Some simple helper functions as JS defines many functional operators on the array object
+
+const map = (f, arr) =&gt; arr.map(f)
+
+const reduce = (f, arr) =&gt; arr.reduce(f)
+
+const square = arr =&gt; map(x =&gt; x * x, arr)
+
+const sum = arr =&gt; reduce((x, y) =&gt; x + y, arr)
+
+// solution
+
+const solution = arr =&gt; sum(square(arr))
+</code></pre>
+
+<p>As we can see, this is good but still the solution needs to take the arr argument and operate on it. If we compare it to the definition of <em>B</em> combinator the pattern emerges from right hand side readily.</p>
+
+<pre><code class="language-JavaScript">const solution = B(sum, square)
+</code></pre>
+
+<p>And there we go with a point free solution - which simply states that the sum of squares of whatever is just the <em>B</em> combination of sum and square!</p>
+
+<p>Note: sum and square functions are unique in that they don’t operate on single scalar element but on the whole arrays - this is something akin to array programming languages like <code class="language-plaintext highlighter-rouge">APL</code>, <code class="language-plaintext highlighter-rouge">J</code> and <code class="language-plaintext highlighter-rouge">BQN</code> which have piqued my interest recently. And interestingly, it is these languages that use a lot of combinatory logic to solve problems.)</p>
+
+<p>To the sharp minded one, the <em>B</em> combinator is something already present in some programming languages, for example - in <code class="language-plaintext highlighter-rouge">Haskell</code> this is simply the . operator. It would look like:</p>
+
+<pre><code class="language-Haskell">let solution = sum . map (\x -&gt; x * x)
+</code></pre>
+
+<p>And in <code class="language-plaintext highlighter-rouge">BQN</code> (one of the weirdly interesting array languages) the solution is:</p>
+
+<pre><code class="language-APL">Sol ← +´⋆⟜2
+</code></pre>
+
+<p>The B operator is simply putting them side by side. (Note: the bit <code class="language-plaintext highlighter-rouge">⋆⟜</code> essentially binds the exponentiation operator to 2 on the right hand side - that is flips the arguments and then curries it so it becomes a one argument function which takes an array and returns the square of each. And the <code class="language-plaintext highlighter-rouge">+´</code> bit is simply doing the + reduction on the resultant array).</p>
+
+<p>(More on BQN and array programming in later blogs :-])</p>
+
+<p><code class="language-plaintext highlighter-rouge">B</code> combinator is only the beginning of this wild world of combinatory logic - there are more exotic combinators like <code class="language-plaintext highlighter-rouge">S</code>, <code class="language-plaintext highlighter-rouge">K</code>, <code class="language-plaintext highlighter-rouge">I</code>, <code class="language-plaintext highlighter-rouge">S'</code> etc. and great programming languages like <code class="language-plaintext highlighter-rouge">BQN</code> and <code class="language-plaintext highlighter-rouge">APL</code> which take advantage of those. Hope to explore more in later posts.</p>
+
+<ul>
+  <li><a href="https://www.dyalog.com/">Dyalog APL</a></li>
+  <li><a href="https://www.jsoftware.com/#/">J language</a></li>
+  <li><a href="https://mlochbaum.github.io/BQN/try.html">BQN Repl</a></li>
+</ul>
+
+
+
+
+    </body>
+</html>
+
