@@ -54,7 +54,7 @@ body {
 
 .submenuitem {
     position: relative;
-    left: 4%;
+    left: 2%;
     background-color: rgb(83, 54, 170);
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: medium;
@@ -98,7 +98,7 @@ body {
 
 a {
     color: bisque;
-    font-size: larger;
+    font-size: large;
 }
 
 .code {
