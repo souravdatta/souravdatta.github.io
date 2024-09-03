@@ -1,0 +1,111 @@
+html,
+body {
+    width: 99%;
+    height: 96%;
+    background-color: rgb(2, 2, 171);
+}
+
+.title {
+    margin: 10px;
+    padding: 4px;
+    color: yellow;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: larger;
+    text-decoration: wavy;
+}
+
+.main-content {
+    position: relative;
+    top: 0%;
+    left: 0%;
+    margin: 20px;
+    width: 100%;
+    height: 100%;
+    min-width: 400px;
+}
+
+.menu {
+    position: relative;
+    margin: 4px;
+    width: 12%;
+    min-width: 100px;
+    border-top: 4px solid yellow;
+    border-left: 6px solid yellow;
+    border-bottom: 1px solid yellow;
+    border-right: 4px solid yellow;
+    border-bottom-right-radius: 10px;
+    border-top-left-radius: 10px;
+    float: left;
+}
+
+.menuitem {
+    background-color: rgb(96, 63, 193);
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: large;
+    margin: 20px;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 2px;
+    /* border-top-left-radius: 10px;
+    border-left: 4px solid rgb(205, 134, 2);
+    border-top: 1px solid rgb(205, 134, 2); */
+    text-align: center;
+}
+
+.submenuitem {
+    position: relative;
+    left: 4%;
+    background-color: rgb(83, 54, 170);
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: medium;
+    margin: 20px;
+    padding: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    /* border-top-left-radius: 10px;
+    border-left: 4px solid rgb(205, 134, 2);
+    border-top: 1px solid rgb(205, 134, 2); */
+    text-align: center;
+}
+
+.content {
+    position: relative;
+    top: 4px;
+    width: 82%;
+    height: 94%;
+    min-height: 80%;
+    min-width: 600px;
+    margin: 24px;
+    border-top: 2px solid yellow;
+    border-left: 6px solid yellow;
+    border-bottom: 1px solid yellow;
+    border-right: 4px solid yellow;
+    border-bottom-left-radius: 10px;
+    border-top-right-radius: 10px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: larger;
+    padding: 10px;
+    overflow: auto;
+}
+
+.content:hover {
+    border-top: 2px solid orange;
+    border-left: 6px solid orange;
+    border-bottom: 1px solid orange;
+    border-right: 4px solid orange;
+}
+
+a {
+    color: bisque;
+    font-size: larger;
+}
+
+.code {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: medium;
+    margin: 10px;
+    padding: 6px;
+    color: burlywood;
+}
