@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SDv1.0</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+      canvas {
+        display: block;
+      }
+      #score {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="score">Score: 0</div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const scoreDisplay = document.getElementById("score");
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      // Maze config
+      const tileSize = 40;
+      const cols = Math.floor(window.innerWidth / tileSize);
+      const rows = Math.floor(window.innerHeight / tileSize);
+      let maze = [];
+
+      function generateMaze(cols, rows) {
+        const grid = Array.from({ length: rows }, () =>
+          Array.from({ length: cols }, () => 1)
+        );
+
+        function carve(x, y) {
+          const directions = [
+            [0, -2],
+            [2, 0],
+            [0, 2],
+            [-2, 0],
+          ].sort(() => Math.random() - 0.5);
+
+          for (let [dx, dy] of directions) {
+            const nx = x + dx,
+              ny = y + dy;
+            if (
+              nx > 0 &&
+              ny > 0 &&
+              nx < cols - 1 &&
+              ny < rows - 1 &&
+              grid[ny][nx] === 1
+            ) {
+              grid[ny][nx] = 0;
+              grid[y + dy / 2][x + dx / 2] = 0;
+              carve(nx, ny);
+            }
+          }
+        }
+
+        grid[1][1] = 0;
+        carve(1, 1);
+        return grid;
+      }
+
+      maze = generateMaze(cols, rows);
+
+      function drawMaze() {
+        ctx.fillStyle = "darkgray";
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            if (maze[y][x] === 1) {
+              ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            }
+          }
+        }
+      }
+
+      // Keyboard input
+      let keys = {};
+      document.addEventListener("keydown", (e) => {
+        keys[e.key] = true;
+      });
+      document.addEventListener("keyup", (e) => {
+        keys[e.key] = false;
+      });
+
+      // Scorpion properties
+      let scorpionX = tileSize + tileSize / 2;
+      let scorpionY = tileSize + tileSize / 2;
+      const moveSpeed = 2;
+      let scorpionAngle = 0;
+
+      // Moth
+      let moth;
+      const mothTimeout = 120000;
+      let score = 0;
+
+      function spawnNewMoth() {
+        const openTiles = [];
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            if (maze[row][col] === 0) {
+              openTiles.push({
+                x: col * tileSize + tileSize / 2,
+                y: row * tileSize + tileSize / 2,
+              });
+            }
+          }
+        }
+        const spot = openTiles[Math.floor(Math.random() * openTiles.length)];
+        moth = {
+          x: spot.x,
+          y: spot.y,
+          size: 10,
+          speed: 1,
+          angle: Math.random() * Math.PI * 2,
+          spawnTime: Date.now(),
+        };
+      }
+
+      spawnNewMoth();
+
+      function getTile(x, y) {
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
+        return maze[row] && maze[row][col] === 0;
+      }
+
+      function updateMoth() {
+        const nextX = moth.x + Math.cos(moth.angle) * moth.speed;
+        const nextY = moth.y + Math.sin(moth.angle) * moth.speed;
+
+        if (getTile(nextX, nextY)) {
+          moth.x = nextX;
+          moth.y = nextY;
+        } else {
+          moth.angle += Math.PI / 2;
+        }
+
+        if (Math.random() < 0.01) {
+          moth.angle += ((Math.random() - 0.5) * Math.PI) / 2;
+        }
+
+        if (Date.now() - moth.spawnTime > mothTimeout) {
+          spawnNewMoth();
+        }
+      }
+
+      function drawMoth() {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.ellipse(
+          moth.x,
+          moth.y,
+          moth.size,
+          moth.size / 2,
+          moth.angle,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(
+          moth.x + 5,
+          moth.y,
+          moth.size * 0.8,
+          moth.size * 0.3,
+          moth.angle + Math.PI / 4,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(
+          moth.x - 5,
+          moth.y,
+          moth.size * 0.8,
+          moth.size * 0.3,
+          moth.angle - Math.PI / 4,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      function checkCollision() {
+        const dx = scorpionX - moth.x;
+        const dy = scorpionY - moth.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 20) {
+          score++;
+          scoreDisplay.textContent = `Score: ${score}`;
+          spawnNewMoth();
+        }
+      }
+
+      function moveScorpion() {
+        let vx = 0,
+          vy = 0;
+
+        if (keys["ArrowUp"] || keys["w"]) vy = -moveSpeed;
+        if (keys["ArrowDown"] || keys["s"]) vy = moveSpeed;
+        if (keys["ArrowLeft"] || keys["a"]) vx = -moveSpeed;
+        if (keys["ArrowRight"] || keys["d"]) vx = moveSpeed;
+
+        // Normalize diagonal movement
+        if (vx !== 0 && vy !== 0) {
+          vx *= Math.SQRT1_2;
+          vy *= Math.SQRT1_2;
+        }
+
+        if (vx !== 0 || vy !== 0) {
+          scorpionAngle = Math.atan2(vy, vx);
+        }
+
+        const nextX = scorpionX + vx;
+        const nextY = scorpionY + vy;
+
+        if (getTile(nextX, nextY)) {
+          scorpionX = nextX;
+          scorpionY = nextY;
+        }
+      }
+
+      function drawScorpion() {
+        ctx.save();
+        ctx.translate(scorpionX, scorpionY);
+        ctx.rotate(scorpionAngle);
+
+        // Body
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Spine
+        for (let i = 1; i <= 4; i++) {
+          ctx.beginPath();
+          ctx.arc(-i * 6, 0, 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Legs
+        for (let i = -1; i <= 1; i += 2) {
+          for (let j = 1; j <= 3; j++) {
+            ctx.beginPath();
+            ctx.moveTo(-j * 6, 0);
+            ctx.lineTo(-j * 6 + 4 * i, -8);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-j * 6, 0);
+            ctx.lineTo(-j * 6 + 4 * i, 8);
+            ctx.stroke();
+          }
+        }
+
+        // Tail
+        ctx.beginPath();
+        ctx.moveTo(-25, 0);
+        ctx.lineTo(-30, -5);
+        ctx.lineTo(-35, 0);
+        ctx.lineTo(-30, 5);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawMaze();
+        moveScorpion();
+        updateMoth();
+        checkCollision();
+        drawScorpion();
+        drawMoth();
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
