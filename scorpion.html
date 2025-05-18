@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SDv1.0</title>
+    <link rel="stylesheet" href="site.css" />
+</head>
+
+<body>
+    <div class="main-content">
+        <div class="menu">
+            <div class="menuitem">
+                <a href="index.html">Home</a>
+            </div>
+            <div class="menuitem">
+                <a href="profile.html">Profile</a>
+                <div class="submenuitem">
+                    <a href="resume.html">Resume</a>
+                </div>
+            </div>
+            <div class="menuitem">
+                <a href="blog.html">Blog</a>
+            </div>
+            <div class="menuitem">
+                <a href="reviews.html">Books and stuffs</a>
+            </div>
+            <div class="menuitem">
+                <a href="writings.html">Writings</a>
+                <div class="submenuitem">
+                    <a href="stories.html">Stories</a>
+                </div>
+                <div class="submenuitem">
+                    <a href="poems.html">Poems</a>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <canvas id="canvas"></canvas>
+    <div id="score">Score: 0</div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Mouse position
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Scorpion properties
+        let scorpionX = canvas.width / 2;
+        let scorpionY = canvas.height / 2;
+        const bodyLength = 60;
+        const bodyWidth = 15;
+        const tailLength = 80;
+        const tailSegments = 6;
+        const legCount = 4;
+        const femurLength = 20;
+        const tibiaLength = 25;
+        const moveSpeed = 0.05;
+        let time = 0;
+
+        // Moth properties
+        let moth = {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: 10,
+            speed: 1, // Slow movement
+            angle: Math.random() * Math.PI * 2,
+            spawnTime: Date.now()
+        };
+        const mothTimeout = 120000; // 2 minutes in milliseconds
+        let score = 0;
+
+        // Update moth position
+        function updateMoth() {
+            moth.x += Math.cos(moth.angle) * moth.speed;
+            moth.y += Math.sin(moth.angle) * moth.speed;
+
+            // Bounce off walls
+            if (moth.x < moth.size || moth.x > canvas.width - moth.size) {
+                moth.angle = Math.PI - moth.angle;
+            }
+            if (moth.y < moth.size || moth.y > canvas.height - moth.size) {
+                moth.angle = -moth.angle;
+            }
+
+            // Occasionally change direction
+            if (Math.random() < 0.01) {
+                moth.angle += (Math.random() - 0.5) * Math.PI / 2;
+            }
+
+            // Check if moth has timed out (2 minutes)
+            if (Date.now() - moth.spawnTime > mothTimeout) {
+                spawnNewMoth();
+            }
+        }
+
+        // Spawn new moth
+        function spawnNewMoth() {
+            moth = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 10,
+                speed: 1,
+                angle: Math.random() * Math.PI * 2,
+                spawnTime: Date.now()
+            };
+        }
+
+        // Check collision between scorpion and moth
+        function checkCollision() {
+            const dx = scorpionX - moth.x;
+            const dy = scorpionY - moth.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < bodyLength / 2 + moth.size) {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+                spawnNewMoth();
+            }
+        }
+
+        // Draw moth (simple wings)
+        function drawMoth() {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.ellipse(moth.x, moth.y, moth.size, moth.size / 2, moth.angle, 0, Math.PI * 2); // Body
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(moth.x + 5, moth.y, moth.size * 0.8, moth.size * 0.3, moth.angle + Math.PI / 4, 0, Math.PI * 2); // Left wing
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(moth.x - 5, moth.y, moth.size * 0.8, moth.size * 0.3, moth.angle - Math.PI / 4, 0, Math.PI * 2); // Right wing
+            ctx.fill();
+        }
+
+        function drawScorpion() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'white';
+
+            // Move scorpion towards mouse
+            const dx = mouseX - scorpionX;
+            const dy = mouseY - scorpionY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > 5) {
+                scorpionX += dx * moveSpeed;
+                scorpionY += dy * moveSpeed;
+            }
+
+            // Calculate angle towards mouse
+            const angle = Math.atan2(dy, dx);
+
+            // Draw body (segmented mesosoma)
+            const segments = 4;
+            const segmentLength = bodyLength / segments;
+            for (let i = 0; i < segments; i++) {
+                const segX = scorpionX + (i * segmentLength - bodyLength / 2) * Math.cos(angle);
+                const segY = scorpionY + (i * segmentLength - bodyLength / 2) * Math.sin(angle);
+                ctx.beginPath();
+                ctx.ellipse(segX, segY, segmentLength / 2, bodyWidth / 2, angle, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Draw tail (metasoma)
+            let tailX = scorpionX - (bodyLength / 2) * Math.cos(angle);
+            let tailY = scorpionY - (bodyLength / 2) * Math.sin(angle);
+            const tailSegmentLength = tailLength / tailSegments;
+            ctx.beginPath();
+            ctx.moveTo(tailX, tailY);
+            for (let i = 0; i < tailSegments; i++) {
+                const tailAngle = angle + Math.sin(time + i * 0.4) * 0.15;
+                tailX -= tailSegmentLength * Math.cos(tailAngle);
+                tailY -= tailSegmentLength * Math.sin(tailAngle);
+                ctx.lineTo(tailX, tailY);
+                ctx.ellipse(tailX, tailY, 4, 2, tailAngle, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            // Draw stinger
+            ctx.beginPath();
+            ctx.moveTo(tailX, tailY);
+            const stingerX = tailX - 8 * Math.cos(angle);
+            const stingerY = tailY - 8 * Math.sin(angle);
+            ctx.lineTo(stingerX, stingerY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(stingerX, stingerY, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw legs with joints
+            for (let side = -1; side <= 1; side += 2) {
+                for (let i = 0; i < legCount; i++) {
+                    const legPos = (i / (legCount - 1)) * bodyLength - bodyLength / 2;
+                    const legBaseX = scorpionX + legPos * Math.cos(angle) - (bodyWidth / 2) * side * Math.sin(angle);
+                    const legBaseY = scorpionY + legPos * Math.sin(angle) + (bodyWidth / 2) * side * Math.cos(angle);
+
+                    // Femur animation
+                    const femurAngle = angle + side * (Math.PI / 2) + Math.sin(time + i + side) * 0.3;
+                    const femurEndX = legBaseX + femurLength * Math.cos(femurAngle);
+                    const femurEndY = legBaseY + femurLength * Math.sin(femurAngle);
+
+                    // Tibia animation
+                    const tibiaAngle = femurAngle + Math.sin(time + i + side + 0.5) * 0.2 + side * 0.3;
+                    const tibiaEndX = femurEndX + tibiaLength * Math.cos(tibiaAngle);
+                    const tibiaEndY = femurEndY + tibiaLength * Math.sin(tibiaAngle);
+
+                    // Draw femur
+                    ctx.beginPath();
+                    ctx.moveTo(legBaseX, legBaseY);
+                    ctx.lineTo(femurEndX, femurEndY);
+                    ctx.stroke();
+
+                    // Draw tibia
+                    ctx.beginPath();
+                    ctx.moveTo(femurEndX, femurEndY);
+                    ctx.lineTo(tibiaEndX, tibiaEndY);
+                    ctx.stroke();
+
+                    // Draw joint
+                    ctx.beginPath();
+                    ctx.arc(femurEndX, femurEndY, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            time += 0.1;
+            updateMoth();
+            checkCollision();
+            drawScorpion();
+            drawMoth();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+        </div>
+    </div>
+</body>
+
+</html>
