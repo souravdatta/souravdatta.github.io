@@ -1,41 +1,16 @@
-<!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SDv1.0</title>
-    <link rel="stylesheet" href="site.css" />
+    <style>
+        body { margin: 0; overflow: hidden; background: black; }
+        canvas { display: block; }
+        #score { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; font-size: 20px; }
+    </style>
 </head>
-
 <body>
-    <div class="main-content">
-        <div class="menu">
-            <div class="menuitem">
-                <a href="index.html">Home</a>
-            </div>
-            <div class="menuitem">
-                <a href="profile.html">Profile</a>
-                <div class="submenuitem">
-                    <a href="resume.html">Resume</a>
-                </div>
-            </div>
-            <div class="menuitem">
-                <a href="blog.html">Blog</a>
-            </div>
-            <div class="menuitem">
-                <a href="reviews.html">Books and stuffs</a>
-            </div>
-            <div class="menuitem">
-                <a href="writings.html">Writings</a>
-                <div class="submenuitem">
-                    <a href="stories.html">Stories</a>
-                </div>
-                <div class="submenuitem">
-                    <a href="poems.html">Poems</a>
-                </div>
-            </div>
-        </div>
-        <div class="content">
-            <canvas id="canvas"></canvas>
+    <canvas id="canvas"></canvas>
     <div id="score">Score: 0</div>
     <script>
         const canvas = document.getElementById('canvas');
@@ -248,8 +223,5 @@
 
         animate();
     </script>
-        </div>
-    </div>
 </body>
-
 </html>
