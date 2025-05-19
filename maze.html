@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SDv1.0</title>
+    <title>Scorpion Maze Hunt</title>
     <style>
       body {
         margin: 0;
@@ -100,6 +100,15 @@
       });
       document.addEventListener("keyup", (e) => {
         keys[e.key] = false;
+      });
+
+      // Mouse click target
+      let clickTarget = null;
+      canvas.addEventListener("click", (e) => {
+        clickTarget = {
+          x: e.clientX,
+          y: e.clientY,
+        };
       });
 
       // Scorpion properties
@@ -221,7 +230,19 @@
         if (keys["ArrowLeft"] || keys["a"]) vx = -moveSpeed;
         if (keys["ArrowRight"] || keys["d"]) vx = moveSpeed;
 
-        // Normalize diagonal movement
+        // Click movement
+        if (clickTarget && vx === 0 && vy === 0) {
+          const dx = clickTarget.x - scorpionX;
+          const dy = clickTarget.y - scorpionY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 2) {
+            vx = (dx / dist) * moveSpeed;
+            vy = (dy / dist) * moveSpeed;
+          } else {
+            clickTarget = null; // reached target
+          }
+        }
+
         if (vx !== 0 && vy !== 0) {
           vx *= Math.SQRT1_2;
           vy *= Math.SQRT1_2;
@@ -237,6 +258,8 @@
         if (getTile(nextX, nextY)) {
           scorpionX = nextX;
           scorpionY = nextY;
+        } else {
+          clickTarget = null;
         }
       }
 
@@ -245,21 +268,18 @@
         ctx.translate(scorpionX, scorpionY);
         ctx.rotate(scorpionAngle);
 
-        // Body
         ctx.strokeStyle = "white";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Spine
         for (let i = 1; i <= 4; i++) {
           ctx.beginPath();
           ctx.arc(-i * 6, 0, 3, 0, Math.PI * 2);
           ctx.stroke();
         }
 
-        // Legs
         for (let i = -1; i <= 1; i += 2) {
           for (let j = 1; j <= 3; j++) {
             ctx.beginPath();
@@ -273,7 +293,6 @@
           }
         }
 
-        // Tail
         ctx.beginPath();
         ctx.moveTo(-25, 0);
         ctx.lineTo(-30, -5);
